@@ -625,7 +625,23 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
 }
 
-function submitForm() {
+// ── PASTE YOUR APPS SCRIPT WEB APP URL HERE ──
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbznPuGDI3KmbNltxPWRBE8tTCai2T7Y6NE64RClpcEFzTfCUR-iWCEh-lbFkgAhKJb9iQ/exec';
+
+function getStarRating(name) {
+  const checked = document.querySelector('input[name="' + name + '"]:checked');
+  return checked ? checked.value : '';
+}
+function getRadio(name) {
+  const checked = document.querySelector('input[name="' + name + '"]:checked');
+  return checked ? checked.value : '';
+}
+function getTextarea(idx) {
+  const areas = document.querySelectorAll('textarea');
+  return areas[idx] ? areas[idx].value.trim() : '';
+}
+
+async function submitForm() {
   const name    = document.getElementById('name').value.trim();
   const company = document.getElementById('company').value.trim();
   const city    = document.getElementById('city').value.trim();
@@ -634,6 +650,53 @@ function submitForm() {
     alert('Please fill in your Name, Company, Phone Number, and City before submitting.');
     return;
   }
+
+  const btn = document.querySelector('.submit-btn');
+  btn.textContent = 'Submitting…';
+  btn.disabled = true;
+
+  const data = {
+    timestamp:      new Date().toLocaleString('en-IN'),
+    name,
+    company,
+    phone,
+    email:          document.getElementById('email').value.trim(),
+    city,
+    guava_rating:   getStarRating('guava_rating'),
+    guava_taste:    getRadio('guava_taste'),
+    guava_market:   getRadio('guava_market'),
+    guava_comments: getTextarea(0),
+    orange_rating:  getStarRating('orange_rating'),
+    orange_taste:   getRadio('orange_taste'),
+    orange_market:  getRadio('orange_market'),
+    orange_comments:getTextarea(1),
+    poms_rating:    getStarRating('poms_rating'),
+    poms_perf:      getRadio('poms_perf'),
+    poms_demand:    getRadio('poms_demand'),
+    poms_continue:  getRadio('poms_continue'),
+    poms_comments:  getTextarea(2),
+    tams_rating:    getStarRating('tams_rating'),
+    tams_perf:      getRadio('tams_perf'),
+    tams_demand:    getRadio('tams_demand'),
+    tams_continue:  getRadio('tams_continue'),
+    tams_comments:  getTextarea(3),
+    top_product:    getRadio('top_product'),
+    interest:       getRadio('interest'),
+    offtake:        document.getElementById('offtake').value,
+    overall_comments: getTextarea(4),
+  };
+
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch(e) {
+    console.log('Submission error:', e);
+  }
+
   document.getElementById('form-inner').style.display = 'none';
   document.getElementById('success').style.display = 'block';
   document.getElementById('success').scrollIntoView({ behavior: 'smooth' });
