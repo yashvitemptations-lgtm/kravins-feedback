@@ -641,7 +641,7 @@ function getTextarea(idx) {
   return areas[idx] ? areas[idx].value.trim() : '';
 }
 
-async function submitForm() {
+function submitForm() {
   const name    = document.getElementById('name').value.trim();
   const company = document.getElementById('company').value.trim();
   const city    = document.getElementById('city').value.trim();
@@ -650,10 +650,6 @@ async function submitForm() {
     alert('Please fill in your Name, Company, Phone Number, and City before submitting.');
     return;
   }
-
-  const btn = document.querySelector('.submit-btn');
-  btn.textContent = 'Submitting…';
-  btn.disabled = true;
 
   const data = {
     timestamp:      new Date().toLocaleString('en-IN'),
@@ -686,26 +682,17 @@ async function submitForm() {
     overall_comments: getTextarea(4),
   };
 
-  // Use a hidden form POST — most reliable method for Google Apps Script
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = SHEET_URL;
-  form.target = 'hidden_iframe';
-  form.style.display = 'none';
+  // Build query string and send via no-cors fetch
+  const params = new URLSearchParams(data);
 
-  // Append all data as hidden fields
-  Object.keys(data).forEach(key => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = key;
-    input.value = data[key];
-    form.appendChild(input);
-  });
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  }).catch(() => {}); // ignore CORS response — data still reaches the sheet
 
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
-
+  // Show success immediately — don't wait for response
   document.getElementById('form-inner').style.display = 'none';
   document.getElementById('success').style.display = 'block';
   document.getElementById('success').scrollIntoView({ behavior: 'smooth' });
